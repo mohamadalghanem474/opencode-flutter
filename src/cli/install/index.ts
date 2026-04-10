@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs"
-import { join, resolve, dirname } from "path"
+import { join, dirname } from "path"
 import pc from "picocolors"
 import {
     PLUGIN_NAME,
@@ -7,8 +7,6 @@ import {
     CONFIG_DIR,
     readJson,
     mergeDefaults,
-    copyDirSync,
-    writeVersionMarker,
 } from "../../shared/index"
 import { OPENCODE_DEFAULTS, COMPANION_PLUGINS } from "../../config/defaults"
 
@@ -107,45 +105,9 @@ export async function runInstall(opts: InstallOptions): Promise<void> {
         console.log(pc.green(`    ✓ Saved ${configPath}`))
     }
 
-    // ── Step 5: Sync agent/command/skill files ────────────────────────────
-    console.log(pc.dim("  Step 5: Sync config files"))
-
-    const configRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "config")
-    const configRootAlt = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "config")
-    const sourceDir = existsSync(configRoot) ? configRoot : existsSync(configRootAlt) ? configRootAlt : null
-
-    if (sourceDir) {
-        const dirs = ["agents", "commands", "skills"]
-        for (const dir of dirs) {
-            const src = join(sourceDir, dir)
-            const dest = join(CONFIG_DIR, dir)
-            if (existsSync(src)) {
-                try {
-                    copyDirSync(src, dest)
-                    console.log(pc.green(`    ✓ Synced ${dir}/`))
-                } catch (err) {
-                    console.log(pc.red(`    ✗ Failed to sync ${dir}/: ${err}`))
-                }
-            }
-        }
-
-        // Copy AGENTS.md
-        const agentsMdSrc = join(sourceDir, "AGENTS.md")
-        const agentsMdDest = join(CONFIG_DIR, "AGENTS.md")
-        if (existsSync(agentsMdSrc)) {
-            try {
-                const { copyFileSync } = await import("fs")
-                copyFileSync(agentsMdSrc, agentsMdDest)
-                console.log(pc.green("    ✓ Synced AGENTS.md"))
-            } catch (err) {
-                console.log(pc.red(`    ✗ Failed to sync AGENTS.md: ${err}`))
-            }
-        }
-
-        writeVersionMarker()
-    } else {
-        console.log(pc.yellow("    ! Config source not found — files will sync on first OpenCode start"))
-    }
+    // ── Step 5: (Agents/commands injected at runtime via config hook) ────
+    console.log(pc.dim("  Step 5: Agents & commands"))
+    console.log(pc.green("    ✓ Injected at runtime via plugin config hook (no file copying)"))
 
     // ── Step 6: Create project-level config (if in a project dir) ─────────
     const projectOpencodeDir = join(process.cwd(), ".opencode")
@@ -189,6 +151,3 @@ export async function runInstall(opts: InstallOptions): Promise<void> {
     console.log(pc.dim("  Restart OpenCode if it's already running to load the plugin."))
     console.log()
 }
-
-// Inline import for ESM compat
-import { fileURLToPath } from "url"

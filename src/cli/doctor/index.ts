@@ -1,13 +1,21 @@
 import { execSync } from "child_process"
 import { existsSync, readdirSync } from "fs"
-import { join } from "path"
+import { join, resolve, dirname } from "path"
 import pc from "picocolors"
-import { CONFIG_DIR, PLUGIN_VERSION, readInstalledVersion } from "../../shared/index"
+import { CONFIG_DIR, PLUGIN_VERSION } from "../../shared/index"
 import { loadPluginConfig } from "../../plugin-config"
 
 // ---------------------------------------------------------------------------
 // opencode-flutter doctor — comprehensive plugin health check
 // ---------------------------------------------------------------------------
+
+// Plugin's own bundled config directory (read at runtime, never copied)
+const PLUGIN_CONFIG_ROOT = resolve(
+    dirname(import.meta.url.replace("file://", "")),
+    "..",
+    "..",
+    "config",
+)
 
 interface DoctorOptions {
     verbose: boolean
@@ -63,24 +71,9 @@ export async function runDoctor(opts: DoctorOptions): Promise<void> {
         }
     }
 
-    // ── 2. Plugin version & sync ──────────────────────────────────────────
+    // ── 2. Plugin version ───────────────────────────────────────────────
     {
-        const installed = readInstalledVersion()
-        if (installed === PLUGIN_VERSION) {
-            checks.push({ name: "Plugin sync", status: "pass", message: `v${PLUGIN_VERSION} (synced)` })
-        } else if (installed) {
-            checks.push({
-                name: "Plugin sync",
-                status: "warn",
-                message: `Synced: v${installed}, current: v${PLUGIN_VERSION}. Restart OpenCode to update.`,
-            })
-        } else {
-            checks.push({
-                name: "Plugin sync",
-                status: "warn",
-                message: "Not yet synced. Start OpenCode to trigger first-run sync.",
-            })
-        }
+        checks.push({ name: "Plugin version", status: "pass", message: `v${PLUGIN_VERSION} (config hook — no file sync)` })
     }
 
     // ── 3. Flutter SDK ─────────────────────────────────────────────────────
@@ -105,39 +98,39 @@ export async function runDoctor(opts: DoctorOptions): Promise<void> {
         }
     }
 
-    // ── 5. Agent files ─────────────────────────────────────────────────────
+    // ── 5. Agent files (bundled in plugin package) ────────────────────────
     {
-        const agentsDir = join(CONFIG_DIR, "agents")
+        const agentsDir = join(PLUGIN_CONFIG_ROOT, "agents")
         if (existsSync(agentsDir)) {
             const agents = readdirSync(agentsDir).filter((f) => f.endsWith(".md"))
             checks.push({
                 name: "Agent files",
                 status: agents.length >= 10 ? "pass" : "warn",
-                message: `${agents.length} agents in ${agentsDir}`,
+                message: `${agents.length} agents (bundled, injected via config hook)`,
             })
         } else {
-            checks.push({ name: "Agent files", status: "fail", message: "No agents directory found" })
+            checks.push({ name: "Agent files", status: "fail", message: "Bundled agents directory missing" })
         }
     }
 
-    // ── 6. Command files ──────────────────────────────────────────────────
+    // ── 6. Command files (bundled in plugin package) ──────────────────────
     {
-        const commandsDir = join(CONFIG_DIR, "commands")
+        const commandsDir = join(PLUGIN_CONFIG_ROOT, "commands")
         if (existsSync(commandsDir)) {
             const commands = readdirSync(commandsDir).filter((f) => f.endsWith(".md"))
             checks.push({
                 name: "Command files",
                 status: commands.length >= 10 ? "pass" : "warn",
-                message: `${commands.length} commands in ${commandsDir}`,
+                message: `${commands.length} commands (bundled, injected via config hook)`,
             })
         } else {
-            checks.push({ name: "Command files", status: "fail", message: "No commands directory found" })
+            checks.push({ name: "Command files", status: "fail", message: "Bundled commands directory missing" })
         }
     }
 
-    // ── 7. Skill files ────────────────────────────────────────────────────
+    // ── 7. Skill files (bundled in plugin package) ────────────────────────
     {
-        const skillsDir = join(CONFIG_DIR, "skills")
+        const skillsDir = join(PLUGIN_CONFIG_ROOT, "skills")
         if (existsSync(skillsDir)) {
             const skills = readdirSync(skillsDir).filter((entry) => {
                 const skillMd = join(skillsDir, entry, "SKILL.md")
@@ -146,10 +139,10 @@ export async function runDoctor(opts: DoctorOptions): Promise<void> {
             checks.push({
                 name: "Skill files",
                 status: skills.length >= 5 ? "pass" : "warn",
-                message: `${skills.length} skills in ${skillsDir}`,
+                message: `${skills.length} skills (bundled)`,
             })
         } else {
-            checks.push({ name: "Skill files", status: "fail", message: "No skills directory found" })
+            checks.push({ name: "Skill files", status: "fail", message: "Bundled skills directory missing" })
         }
     }
 
@@ -175,13 +168,13 @@ export async function runDoctor(opts: DoctorOptions): Promise<void> {
         }
     }
 
-    // ── 9. AGENTS.md ──────────────────────────────────────────────────────
+    // ── 9. AGENTS.md (bundled in plugin package) ──────────────────────────
     {
-        const agentsMd = join(CONFIG_DIR, "AGENTS.md")
+        const agentsMd = join(PLUGIN_CONFIG_ROOT, "AGENTS.md")
         if (existsSync(agentsMd)) {
-            checks.push({ name: "AGENTS.md", status: "pass", message: "Present" })
+            checks.push({ name: "AGENTS.md", status: "pass", message: "Bundled (injected via instructions)" })
         } else {
-            checks.push({ name: "AGENTS.md", status: "warn", message: "Not found — will be created on first sync" })
+            checks.push({ name: "AGENTS.md", status: "fail", message: "Bundled AGENTS.md missing from package" })
         }
     }
 

@@ -11,6 +11,7 @@ declare const OpenCodeFlutterPlugin: (ctx: any) => Promise<{
         event: any;
     }) => Promise<void>;
     name: string;
+    config: (input: import("@opencode-ai/plugin").Config) => Promise<void>;
 }>;
 export default OpenCodeFlutterPlugin;
 export { OpenCodeFlutterPlugin as OpenCodeFlutter };

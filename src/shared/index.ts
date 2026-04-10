@@ -1,11 +1,7 @@
 import {
     readFileSync,
-    writeFileSync,
     existsSync,
     mkdirSync,
-    readdirSync,
-    statSync,
-    copyFileSync,
 } from "fs"
 import { join } from "path"
 
@@ -14,13 +10,12 @@ import { join } from "path"
 // ---------------------------------------------------------------------------
 
 export const PLUGIN_NAME = "@alghanem/opencode-flutter"
-export const PLUGIN_VERSION = "0.2.1"
+export const PLUGIN_VERSION = "0.3.1"
 export const CONFIG_DIR = join(
     process.env.HOME ?? "~",
     ".config",
     "opencode",
 )
-export const VERSION_FILE = join(CONFIG_DIR, ".opencode-flutter-version")
 
 /** Log helper — writes structured log via client.app.log */
 export function log(
@@ -31,20 +26,6 @@ export function log(
     return client.app.log({
         body: { service: PLUGIN_NAME, level, message },
     })
-}
-
-/** Recursively copy a directory, creating targets as needed. */
-export function copyDirSync(src: string, dest: string) {
-    mkdirSync(dest, { recursive: true })
-    for (const entry of readdirSync(src)) {
-        const srcPath = join(src, entry)
-        const destPath = join(dest, entry)
-        if (statSync(srcPath).isDirectory()) {
-            copyDirSync(srcPath, destPath)
-        } else {
-            copyFileSync(srcPath, destPath)
-        }
-    }
 }
 
 /** Read a JSON file, returning an empty object on failure. */
@@ -122,53 +103,4 @@ export function mergeConfigs(
     return result
 }
 
-/** Sync bundled config files to ~/.config/opencode/ */
-export function syncConfigFiles(
-    configRoot: string,
-    dirs: string[],
-    files: string[],
-): { synced: string[]; errors: string[] } {
-    const synced: string[] = []
-    const errors: string[] = []
-
-    for (const dir of dirs) {
-        const src = join(configRoot, dir)
-        const dest = join(CONFIG_DIR, dir)
-        if (existsSync(src)) {
-            try {
-                copyDirSync(src, dest)
-                synced.push(dir)
-            } catch (err) {
-                errors.push(`${dir}: ${err}`)
-            }
-        }
-    }
-
-    for (const file of files) {
-        const src = join(configRoot, file)
-        const dest = join(CONFIG_DIR, file)
-        if (existsSync(src)) {
-            try {
-                mkdirSync(join(CONFIG_DIR), { recursive: true })
-                copyFileSync(src, dest)
-                synced.push(file)
-            } catch (err) {
-                errors.push(`${file}: ${err}`)
-            }
-        }
-    }
-
-    return { synced, errors }
-}
-
-/** Write version marker after successful sync */
-export function writeVersionMarker() {
-    mkdirSync(CONFIG_DIR, { recursive: true })
-    writeFileSync(VERSION_FILE, PLUGIN_VERSION, "utf-8")
-}
-
-/** Read installed version, or null if not installed */
-export function readInstalledVersion(): string | null {
-    if (!existsSync(VERSION_FILE)) return null
-    return readFileSync(VERSION_FILE, "utf-8").trim()
-}
+// end of shared utilities

@@ -1,5 +1,5 @@
 import type { Plugin, Hooks } from "@opencode-ai/plugin"
-import { readFileSync, writeFileSync, existsSync } from "fs"
+import { readFileSync, existsSync } from "fs"
 import { resolve, dirname } from "path"
 
 import { loadPluginConfig } from "./plugin-config"
@@ -8,23 +8,19 @@ import { createTools } from "./create-tools"
 import { createHooks } from "./create-hooks"
 import { createPluginInterface } from "./plugin-interface"
 import { createPluginDispose, type PluginDispose } from "./plugin-dispose"
+import { createConfigHandler } from "./config-handler"
 import {
     PLUGIN_NAME,
     PLUGIN_VERSION,
-    CONFIG_DIR,
-    VERSION_FILE,
     log,
-    syncConfigFiles,
-    writeVersionMarker,
-    readInstalledVersion,
 } from "./shared/index"
 
 // ---------------------------------------------------------------------------
 // opencode-flutter — production-grade OpenCode plugin for Flutter workflows
 // ---------------------------------------------------------------------------
 // Init pipeline:
-//   syncConfigFiles → loadPluginConfig → createManagers → createTools
-//   → createHooks → createPluginInterface → return plugin interface
+//   loadPluginConfig → createManagers → createTools → createHooks
+//   → createPluginInterface → return plugin interface (with config hook)
 // ---------------------------------------------------------------------------
 
 let activePluginDispose: PluginDispose | null = null
@@ -37,58 +33,35 @@ const OpenCodeFlutterPlugin = async (ctx: any) => {
     // ── Dispose previous instance (hot-reload safety) ─────────────────────
     await activePluginDispose?.()
 
-    // ── 1. File sync — copy bundled config files to ~/.config/opencode/ ───
-    const configRoot = resolve(
-        dirname(import.meta.url.replace("file://", "")),
-        "..",
-        "config",
-    )
-    const installedVersion = readInstalledVersion()
-    const needsSync = installedVersion !== PLUGIN_VERSION
-
-    if (needsSync && existsSync(configRoot)) {
-        const { synced, errors } = syncConfigFiles(
-            configRoot,
-            ["agents", "commands", "skills"],
-            ["AGENTS.md"],
-        )
-
-        if (errors.length > 0) {
-            await log(client, "error", `File sync errors: ${errors.join("; ")}`)
-        }
-
-        if (synced.length > 0) {
-            writeVersionMarker()
-            await log(client, "info", `Synced config files (v${PLUGIN_VERSION}): ${synced.join(", ")}`)
-        }
-    }
-
-    // ── 2. Load plugin config (JSONC, user + project merge, validate) ─────
+    // ── 1. Load plugin config (JSONC, user + project merge, validate) ─────
     const pluginConfig = loadPluginConfig(ctx.directory)
 
-    // ── 3. Create managers ────────────────────────────────────────────────
+    // ── 2. Create managers ────────────────────────────────────────────────
     const managers = createManagers({ pluginConfig })
 
-    // ── 4. Create tools ───────────────────────────────────────────────────
+    // ── 3. Create tools ───────────────────────────────────────────────────
     const toolsResult = createTools({
         ctx: { directory: ctx.directory, client, $ },
         pluginConfig,
         managers,
     })
 
-    // ── 5. Create hooks ──────────────────────────────────────────────────
+    // ── 4. Create hooks ──────────────────────────────────────────────────
     const hooks = createHooks({
         ctx: { directory: ctx.directory, client },
         pluginConfig,
     })
 
-    // ── 6. Create plugin dispose ──────────────────────────────────────────
+    // ── 5. Create plugin dispose ──────────────────────────────────────────
     const dispose = createPluginDispose({
         backgroundManager: managers.backgroundManager,
         skillMcpManager: managers.skillMcpManager,
         disposeHooks: hooks.disposeHooks,
     })
     activePluginDispose = dispose
+
+    // ── 6. Create config handler (injects agents, commands, defaults) ─────
+    const configHandler = createConfigHandler({ pluginConfig })
 
     // ── 7. Assemble plugin interface ─────────────────────────────────────
     const pluginInterface = createPluginInterface({
@@ -103,11 +76,12 @@ const OpenCodeFlutterPlugin = async (ctx: any) => {
     await log(
         client,
         "info",
-        `Flutter plugin active (v${PLUGIN_VERSION})${needsSync ? " — files synced" : ""} | ${Object.keys(toolsResult.filteredTools).length} tools | ${toolsResult.availableCategories.length} categories`,
+        `Flutter plugin active (v${PLUGIN_VERSION}) | ${Object.keys(toolsResult.filteredTools).length} tools | ${toolsResult.availableCategories.length} categories`,
     )
 
     return {
         name: PLUGIN_NAME,
+        config: configHandler,
         ...pluginInterface,
     }
 }
