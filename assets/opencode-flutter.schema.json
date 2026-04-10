@@ -95,7 +95,13 @@
         "enabled": { "type": "boolean", "default": false },
         "layout": {
           "type": "string",
-          "enum": ["main-vertical", "main-horizontal", "tiled", "even-horizontal", "even-vertical"],
+          "enum": [
+            "main-vertical",
+            "main-horizontal",
+            "tiled",
+            "even-horizontal",
+            "even-vertical"
+          ],
           "default": "main-vertical"
         }
       }
@@ -105,7 +111,11 @@
       "description": "Ralph loop iteration settings",
       "properties": {
         "enabled": { "type": "boolean", "default": true },
-        "default_max_iterations": { "type": "integer", "minimum": 1, "default": 100 }
+        "default_max_iterations": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 100
+        }
       }
     },
     "runtime_fallback": {
@@ -162,10 +172,19 @@
     "AgentOverride": {
       "type": "object",
       "properties": {
-        "model": { "type": "string", "description": "Model identifier (e.g. 'anthropic/claude-opus-4-6')" },
+        "model": {
+          "type": "string",
+          "description": "Model identifier (e.g. 'anthropic/claude-opus-4-6')"
+        },
         "temperature": { "type": "number", "minimum": 0, "maximum": 2 },
-        "prompt": { "type": "string", "description": "Replace the agent's system prompt" },
-        "prompt_append": { "type": "string", "description": "Append to the agent's system prompt" },
+        "prompt": {
+          "type": "string",
+          "description": "Replace the agent's system prompt"
+        },
+        "prompt_append": {
+          "type": "string",
+          "description": "Append to the agent's system prompt"
+        },
         "fallback_models": {
           "type": "array",
           "items": {
@@ -185,10 +204,16 @@
         },
         "thinking": { "$ref": "#/definitions/ThinkingConfig" },
         "maxTokens": { "type": "integer", "minimum": 1 },
-        "reasoningEffort": { "type": "string", "enum": ["low", "medium", "high"] },
+        "reasoningEffort": {
+          "type": "string",
+          "enum": ["low", "medium", "high"]
+        },
         "steps": { "type": "integer", "minimum": 1 },
         "permission": { "type": "object" },
-        "tools": { "type": "object", "additionalProperties": { "type": "boolean" } }
+        "tools": {
+          "type": "object",
+          "additionalProperties": { "type": "boolean" }
+        }
       }
     },
     "CategoryConfig": {
@@ -201,9 +226,18 @@
         "top_p": { "type": "number", "minimum": 0, "maximum": 1 },
         "prompt_append": { "type": "string" },
         "thinking": { "$ref": "#/definitions/ThinkingConfig" },
-        "reasoningEffort": { "type": "string", "enum": ["low", "medium", "high"] },
-        "textVerbosity": { "type": "string", "enum": ["low", "medium", "high"] },
-        "tools": { "type": "object", "additionalProperties": { "type": "boolean" } },
+        "reasoningEffort": {
+          "type": "string",
+          "enum": ["low", "medium", "high"]
+        },
+        "textVerbosity": {
+          "type": "string",
+          "enum": ["low", "medium", "high"]
+        },
+        "tools": {
+          "type": "object",
+          "additionalProperties": { "type": "boolean" }
+        },
         "maxTokens": { "type": "integer", "minimum": 1 },
         "is_unstable_agent": { "type": "boolean" }
       }
@@ -211,7 +245,11 @@
     "ThinkingConfig": {
       "type": "object",
       "properties": {
-        "type": { "type": "string", "enum": ["enabled", "disabled"], "default": "disabled" },
+        "type": {
+          "type": "string",
+          "enum": ["enabled", "disabled"],
+          "default": "disabled"
+        },
         "budgetTokens": { "type": "integer", "minimum": 1 }
       }
     }

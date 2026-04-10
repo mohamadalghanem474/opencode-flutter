@@ -3,12 +3,7 @@
 // ---------------------------------------------------------------------------
 
 import { execSync } from "child_process";
-import {
-  existsSync,
-  readFileSync,
-  writeFileSync,
-  mkdirSync,
-} from "fs";
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
 import { join, dirname } from "path";
 import { homedir } from "os";
 import { fileURLToPath } from "url";
@@ -98,7 +93,10 @@ try {
 try {
   const pluginConfigPath = join(CONFIG_DIR, "opencode-flutter.json");
 
-  if (!existsSync(pluginConfigPath) || readFileSync(pluginConfigPath, "utf-8").trim() === "") {
+  if (
+    !existsSync(pluginConfigPath) ||
+    readFileSync(pluginConfigPath, "utf-8").trim() === ""
+  ) {
     const defaultConfig = {
       $schema: SCHEMA_URL,
       agents: {},
