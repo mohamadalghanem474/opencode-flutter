@@ -14,7 +14,7 @@ import { join } from "path"
 // ---------------------------------------------------------------------------
 
 export const PLUGIN_NAME = "@alghanem/opencode-flutter"
-export const PLUGIN_VERSION = "0.2.0"
+export const PLUGIN_VERSION = "0.2.1"
 export const CONFIG_DIR = join(
     process.env.HOME ?? "~",
     ".config",

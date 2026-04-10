@@ -1,12 +1,22 @@
 // ---------------------------------------------------------------------------
-// opencode-flutter postinstall — register plugin + create default config
+// opencode-flutter postinstall — register plugin + sync config + create defaults
 // ---------------------------------------------------------------------------
 
 import { execSync } from "child_process";
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
-import { join } from "path";
+import {
+  existsSync,
+  readFileSync,
+  writeFileSync,
+  mkdirSync,
+  readdirSync,
+  statSync,
+  copyFileSync,
+} from "fs";
+import { join, dirname } from "path";
 import { homedir } from "os";
+import { fileURLToPath } from "url";
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const PLUGIN_NAME = "@alghanem/opencode-flutter";
 const MIN_OPENCODE_VERSION = "1.4.0";
 const CONFIG_DIR = join(homedir(), ".config", "opencode");
@@ -21,6 +31,19 @@ function compareVersions(a, b) {
     if ((pa[i] ?? 0) < (pb[i] ?? 0)) return -1;
   }
   return 0;
+}
+
+function copyDirSync(src, dest) {
+  mkdirSync(dest, { recursive: true });
+  for (const entry of readdirSync(src)) {
+    const srcPath = join(src, entry);
+    const destPath = join(dest, entry);
+    if (statSync(srcPath).isDirectory()) {
+      copyDirSync(srcPath, destPath);
+    } else {
+      copyFileSync(srcPath, destPath);
+    }
+  }
 }
 
 // ── 1. OpenCode version check ─────────────────────────────────────────────
@@ -87,7 +110,37 @@ try {
   );
 }
 
-// ── 3. Create default plugin config if missing ────────────────────────────
+// ── 3. Sync agents, commands, skills to ~/.config/opencode/ ───────────────
+try {
+  const configSource = join(__dirname, "config");
+
+  if (existsSync(configSource)) {
+    const dirs = ["agents", "commands", "skills"];
+    for (const dir of dirs) {
+      const src = join(configSource, dir);
+      const dest = join(CONFIG_DIR, dir);
+      if (existsSync(src)) {
+        copyDirSync(src, dest);
+        console.log(`[${PLUGIN_NAME}] Synced ${dir}/ ✓`);
+      }
+    }
+
+    // Copy AGENTS.md
+    const agentsMd = join(configSource, "AGENTS.md");
+    if (existsSync(agentsMd)) {
+      copyFileSync(agentsMd, join(CONFIG_DIR, "AGENTS.md"));
+      console.log(`[${PLUGIN_NAME}] Synced AGENTS.md ✓`);
+    }
+  } else {
+    console.log(`[${PLUGIN_NAME}] Config source not found at ${configSource}, skipping sync.`);
+  }
+} catch (err) {
+  console.warn(
+    `\x1b[33m[${PLUGIN_NAME}] File sync skipped: ${err.message ?? err}\x1b[0m`,
+  );
+}
+
+// ── 4. Create default plugin config if missing ────────────────────────────
 try {
   const pluginConfigPath = join(CONFIG_DIR, "opencode-flutter.json");
 
