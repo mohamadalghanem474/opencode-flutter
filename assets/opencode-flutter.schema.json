@@ -1,0 +1,220 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OpenCode Flutter Plugin Configuration",
+  "description": "Configuration for @alghanem/opencode-flutter plugin. Place in ~/.config/opencode/opencode-flutter.json",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference"
+    },
+    "agents": {
+      "type": "object",
+      "description": "Override settings for built-in agents",
+      "additionalProperties": {
+        "$ref": "#/definitions/AgentOverride"
+      }
+    },
+    "categories": {
+      "type": "object",
+      "description": "Override or define task categories for model routing",
+      "additionalProperties": {
+        "$ref": "#/definitions/CategoryConfig"
+      }
+    },
+    "disabled_hooks": {
+      "type": "array",
+      "description": "List of hook names to disable",
+      "items": {
+        "type": "string",
+        "enum": [
+          "directory-agents-injector",
+          "directory-readme-injector",
+          "rules-injector",
+          "compaction-context-injector",
+          "context-window-monitor",
+          "env-file-guard",
+          "write-existing-file-guard",
+          "tool-output-truncator",
+          "comment-checker",
+          "edit-error-recovery",
+          "thinking-block-validator",
+          "keyword-detector",
+          "todo-continuation-enforcer",
+          "auto-slash-command",
+          "category-skill-reminder",
+          "session-recovery",
+          "json-error-recovery",
+          "runtime-fallback",
+          "model-fallback"
+        ]
+      },
+      "default": []
+    },
+    "disabled_skills": {
+      "type": "array",
+      "description": "List of skill names to disable",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "disabled_tools": {
+      "type": "array",
+      "description": "List of tool names to disable",
+      "items": {
+        "type": "string",
+        "enum": [
+          "flutter_deps",
+          "flutter_gen",
+          "flutter_analyze",
+          "flutter_test",
+          "flutter_build",
+          "call_flutter_agent",
+          "task",
+          "background_output",
+          "background_cancel"
+        ]
+      },
+      "default": []
+    },
+    "disabled_commands": {
+      "type": "array",
+      "description": "List of slash command names to disable",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "disabled_agents": {
+      "type": "array",
+      "description": "List of agent names to disable",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "tmux": {
+      "type": "object",
+      "description": "Tmux integration settings",
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "layout": {
+          "type": "string",
+          "enum": ["main-vertical", "main-horizontal", "tiled", "even-horizontal", "even-vertical"],
+          "default": "main-vertical"
+        }
+      }
+    },
+    "ralph_loop": {
+      "type": "object",
+      "description": "Ralph loop iteration settings",
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "default_max_iterations": { "type": "integer", "minimum": 1, "default": 100 }
+      }
+    },
+    "runtime_fallback": {
+      "type": "object",
+      "description": "Runtime fallback configuration for model failures",
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "cooldown_ms": { "type": "integer", "minimum": 0, "default": 30000 },
+        "max_retries": { "type": "integer", "minimum": 0, "default": 3 }
+      }
+    },
+    "experimental": {
+      "type": "object",
+      "description": "Experimental features",
+      "properties": {
+        "task_system": { "type": "boolean", "default": false },
+        "safe_hook_creation": { "type": "boolean", "default": true },
+        "aggressive_truncation": { "type": "boolean", "default": false },
+        "auto_resume": { "type": "boolean", "default": false }
+      }
+    },
+    "claude_code": {
+      "type": "object",
+      "description": "Claude Code compatibility layer",
+      "properties": {
+        "mcp": { "type": "boolean", "default": true },
+        "commands": { "type": "boolean", "default": true },
+        "skills": { "type": "boolean", "default": true },
+        "agents": { "type": "boolean", "default": true },
+        "hooks": { "type": "boolean", "default": true },
+        "plugins": { "type": "boolean", "default": true }
+      }
+    },
+    "background": {
+      "type": "object",
+      "description": "Background task settings",
+      "properties": {
+        "max_concurrent": { "type": "integer", "minimum": 1, "default": 5 }
+      }
+    },
+    "browser_automation_engine": {
+      "type": "object",
+      "description": "Browser automation settings",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["playwright", "agent-browser"],
+          "default": "playwright"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "AgentOverride": {
+      "type": "object",
+      "properties": {
+        "model": { "type": "string", "description": "Model identifier (e.g. 'anthropic/claude-opus-4-6')" },
+        "temperature": { "type": "number", "minimum": 0, "maximum": 2 },
+        "prompt": { "type": "string", "description": "Replace the agent's system prompt" },
+        "prompt_append": { "type": "string", "description": "Append to the agent's system prompt" },
+        "fallback_models": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "type": "string" },
+              {
+                "type": "object",
+                "properties": {
+                  "model": { "type": "string" },
+                  "variant": { "type": "string" },
+                  "thinking": { "$ref": "#/definitions/ThinkingConfig" }
+                },
+                "required": ["model"]
+              }
+            ]
+          }
+        },
+        "thinking": { "$ref": "#/definitions/ThinkingConfig" },
+        "maxTokens": { "type": "integer", "minimum": 1 },
+        "reasoningEffort": { "type": "string", "enum": ["low", "medium", "high"] },
+        "steps": { "type": "integer", "minimum": 1 },
+        "permission": { "type": "object" },
+        "tools": { "type": "object", "additionalProperties": { "type": "boolean" } }
+      }
+    },
+    "CategoryConfig": {
+      "type": "object",
+      "properties": {
+        "description": { "type": "string" },
+        "model": { "type": "string" },
+        "variant": { "type": "string" },
+        "temperature": { "type": "number", "minimum": 0, "maximum": 2 },
+        "top_p": { "type": "number", "minimum": 0, "maximum": 1 },
+        "prompt_append": { "type": "string" },
+        "thinking": { "$ref": "#/definitions/ThinkingConfig" },
+        "reasoningEffort": { "type": "string", "enum": ["low", "medium", "high"] },
+        "textVerbosity": { "type": "string", "enum": ["low", "medium", "high"] },
+        "tools": { "type": "object", "additionalProperties": { "type": "boolean" } },
+        "maxTokens": { "type": "integer", "minimum": 1 },
+        "is_unstable_agent": { "type": "boolean" }
+      }
+    },
+    "ThinkingConfig": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["enabled", "disabled"], "default": "disabled" },
+        "budgetTokens": { "type": "integer", "minimum": 1 }
+      }
+    }
+  },
+  "additionalProperties": false
+}

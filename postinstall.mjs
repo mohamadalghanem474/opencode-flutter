@@ -1,15 +1,17 @@
 // ---------------------------------------------------------------------------
-// opencode-flutter postinstall — version check + auto-register in opencode.json
+// opencode-flutter postinstall — register plugin + create default config
 // ---------------------------------------------------------------------------
 
 import { execSync } from "child_process";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
-import { join, dirname } from "path";
+import { join } from "path";
 import { homedir } from "os";
 
 const PLUGIN_NAME = "@alghanem/opencode-flutter";
 const MIN_OPENCODE_VERSION = "1.4.0";
 const CONFIG_DIR = join(homedir(), ".config", "opencode");
+const SCHEMA_URL =
+  "https://raw.githubusercontent.com/mohamadalghanem474/opencode-flutter/main/assets/opencode-flutter.schema.json";
 
 function compareVersions(a, b) {
   const pa = a.split(".").map(Number);
@@ -38,9 +40,7 @@ try {
     console.log(`[${PLUGIN_NAME}] OpenCode v${version} detected. ✓`);
   }
 } catch {
-  console.warn(
-    `\x1b[33m[${PLUGIN_NAME}] Warning: Could not detect OpenCode version. Make sure opencode is installed.\x1b[0m`,
-  );
+  // OpenCode not found — that's fine, user may install it later
 }
 
 // ── 2. Auto-register plugin in opencode.json ──────────────────────────────
@@ -60,8 +60,9 @@ try {
         .replace(/,(\s*[}\]])/g, "$1");
       config = JSON.parse(stripped);
     } catch {
-      // Can't parse — don't clobber the file
-      console.log(`[${PLUGIN_NAME}] Could not parse ${configPath}, skipping auto-register.`);
+      console.log(
+        `[${PLUGIN_NAME}] Could not parse ${configPath}, skipping auto-register.`,
+      );
       process.exit(0);
     }
   }
@@ -76,15 +77,46 @@ try {
     pluginList.push(PLUGIN_NAME);
     config.plugin = pluginList;
     writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n", "utf-8");
-    console.log(
-      `[${PLUGIN_NAME}] Registered in ${configPath}. Restart OpenCode to activate.`,
-    );
+    console.log(`[${PLUGIN_NAME}] Registered in ${configPath}. ✓`);
   } else {
-    console.log(`[${PLUGIN_NAME}] Already registered in ${configPath}. ✓`);
+    console.log(`[${PLUGIN_NAME}] Already registered. ✓`);
   }
 } catch (err) {
-  // Non-fatal — don't break npm install
   console.warn(
     `\x1b[33m[${PLUGIN_NAME}] Auto-register skipped: ${err.message ?? err}\x1b[0m`,
+  );
+}
+
+// ── 3. Create default plugin config if missing ────────────────────────────
+try {
+  const pluginConfigPath = join(CONFIG_DIR, "opencode-flutter.json");
+
+  if (!existsSync(pluginConfigPath) || readFileSync(pluginConfigPath, "utf-8").trim() === "") {
+    const defaultConfig = {
+      $schema: SCHEMA_URL,
+      agents: {},
+      categories: {},
+      disabled_hooks: [],
+      disabled_tools: [],
+      disabled_skills: [],
+      disabled_commands: [],
+      disabled_agents: [],
+      experimental: {
+        task_system: false,
+      },
+    };
+
+    writeFileSync(
+      pluginConfigPath,
+      JSON.stringify(defaultConfig, null, 2) + "\n",
+      "utf-8",
+    );
+    console.log(`[${PLUGIN_NAME}] Created ${pluginConfigPath}. ✓`);
+  } else {
+    console.log(`[${PLUGIN_NAME}] Config exists: ${pluginConfigPath}. ✓`);
+  }
+} catch (err) {
+  console.warn(
+    `\x1b[33m[${PLUGIN_NAME}] Config creation skipped: ${err.message ?? err}\x1b[0m`,
   );
 }
