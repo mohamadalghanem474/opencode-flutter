@@ -6,9 +6,8 @@ import {
     PLUGIN_VERSION,
     CONFIG_DIR,
     readJson,
-    mergeDefaults,
 } from "../../shared/index"
-import { OPENCODE_DEFAULTS, COMPANION_PLUGINS } from "../../config/defaults"
+import { COMPANION_PLUGINS } from "../../config/defaults"
 
 // ---------------------------------------------------------------------------
 // opencode-flutter install — one-command setup, like oh-my-openagent
@@ -88,16 +87,14 @@ export async function runInstall(opts: InstallOptions): Promise<void> {
     }
     config.plugin = pluginList
 
-    // ── Step 3: Merge Flutter defaults ────────────────────────────────────
+    // ── Step 3: (Defaults injected at runtime via config hook) ────────────
     console.log(pc.dim("  Step 3: Flutter defaults"))
+    console.log(pc.green("    ✓ All defaults injected at runtime via plugin config hook (not written to opencode.json)"))
 
     if (!config["$schema"]) {
         config["$schema"] = "https://opencode.ai/config.json"
+        changed = true
     }
-
-    mergeDefaults(config, OPENCODE_DEFAULTS)
-    changed = true
-    console.log(pc.green("    ✓ Flutter defaults merged (formatter, LSP, watcher, MCP, permissions)"))
 
     // ── Step 4: Write opencode.json ───────────────────────────────────────
     if (changed) {
