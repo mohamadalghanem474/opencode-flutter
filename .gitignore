@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.opencode/
+.opencode-flutter/
+.env
+.env.*
+.DS_Store
+*.log
