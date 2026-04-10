@@ -13,7 +13,7 @@ import { join } from "path"
 // Shared utilities for opencode-flutter
 // ---------------------------------------------------------------------------
 
-export const PLUGIN_NAME = "opencode-flutter"
+export const PLUGIN_NAME = "@alghanem/opencode-flutter"
 export const PLUGIN_VERSION = "0.1.0"
 export const CONFIG_DIR = join(
     process.env.HOME ?? "~",

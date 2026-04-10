@@ -7,7 +7,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
 import { join, dirname } from "path";
 import { homedir } from "os";
 
-const PLUGIN_NAME = "opencode-flutter";
+const PLUGIN_NAME = "@alghanem/opencode-flutter";
 const MIN_OPENCODE_VERSION = "1.4.0";
 const CONFIG_DIR = join(homedir(), ".config", "opencode");
 

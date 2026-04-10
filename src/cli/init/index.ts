@@ -13,7 +13,7 @@ interface InitOptions {
 const DEFAULT_CONFIG = `{
   // opencode-flutter plugin configuration
   // Docs: https://github.com/alghanem/opencode-flutter
-  "$schema": "./node_modules/opencode-flutter/dist/opencode-flutter.schema.json",
+  "$schema": "./node_modules/@alghanem/opencode-flutter/dist/opencode-flutter.schema.json",
 
   // Per-agent model/temperature overrides
   "agents": {

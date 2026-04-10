@@ -7,3 +7,7 @@ dist/
 .env.*
 .DS_Store
 *.log
+
+# TypeScript declaration build outputs in src/
+src/**/*.d.ts
+src/**/*.d.ts.map

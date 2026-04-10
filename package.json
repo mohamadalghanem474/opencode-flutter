@@ -1,10 +1,13 @@
 {
-  "name": "opencode-flutter",
+  "name": "@alghanem/opencode-flutter",
   "version": "0.1.0",
   "description": "Production-grade OpenCode plugin for Flutter — multi-model orchestration, agent harness, LSP tools, and discipline hooks",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "opencode-flutter": "bin/opencode-flutter.js"
   },

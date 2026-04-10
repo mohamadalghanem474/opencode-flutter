@@ -159,7 +159,7 @@ export async function runInstall(opts: InstallOptions): Promise<void> {
             `{
   // opencode-flutter project-level config
   // Overrides user-level config in ~/.config/opencode/opencode-flutter.jsonc
-  "$schema": "./node_modules/opencode-flutter/dist/opencode-flutter.schema.json",
+  "$schema": "./node_modules/@alghanem/opencode-flutter/dist/opencode-flutter.schema.json",
 
   "agents": {},
   "categories": {},
